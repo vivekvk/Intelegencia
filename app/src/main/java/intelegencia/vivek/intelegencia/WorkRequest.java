@@ -41,45 +41,33 @@ public class WorkRequest extends Worker {
     @Override
     public Result doWork() {
 
-        //getting the input data
-        String location = getInputData().getString(TASK_DESC);
-        getWeatherForecast(location);
+        try {
+            String location = getInputData().getString(TASK_DESC);
 
-        Data output = new Data.Builder()
-                .putString(TEMP,data.get(TEMP).toString())
-                .build();
-        return Result.success(output);
+            ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+
+            Call<WeatherResponseModel> call = apiService.getCurrentWeather(location);
+
+            WeatherResponseModel  model = call.execute().body();
+
+                data.put(TEMP, model.getMain().getTemp().toString());
+                data.put(FEEL_LIKE_TEMP, model.getMain().getFeels_like().toString());
+                data.put(MINIMUM_TEMP, model.getMain().getTemp_min().toString());
+                data.put(MAXIMUM_TEMP, model.getMain().getTemp_max().toString());
+                data.put(HUMIDITY, model.getMain().getHumidity().toString());
+                data.put(PRESSURE, model.getMain().getPressure().toString());
+                data.put(TASK_DESC,model.getWeather().get(0).getDescription());
+
+            Data output = new Data.Builder()
+                    .putAll(data)
+                    .build();
+
+            return Result.success(output);
+
+        }catch (Exception exception) {
+            Log.e("Error cleaning up", "error");
+            return Result.failure();
+        }
     }
 
-    private void getWeatherForecast(String location) {
-
-        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
-
-        Call<WeatherResponseModel> call = apiService.getCurrentWeather(location);
-        call.enqueue(new Callback<WeatherResponseModel>() {
-            @Override
-            public void onResponse(Call<WeatherResponseModel> call, Response<WeatherResponseModel> response) {
-
-                if (response.code() == 200) {
-                    data.put(TEMP, response.body().getMain().getTemp().toString());
-                    data.put(FEEL_LIKE_TEMP, response.body().getMain().getFeels_like().toString());
-                    data.put(MINIMUM_TEMP, response.body().getMain().getTemp_min().toString());
-                    data.put(MAXIMUM_TEMP, response.body().getMain().getTemp_max().toString());
-                    data.put(HUMIDITY, response.body().getMain().getHumidity().toString());
-                    data.put(PRESSURE, response.body().getMain().getPressure().toString());
-
-                } else {
-                    Log.e("Error", "API error");
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<WeatherResponseModel> call, Throwable t) {
-                Log.e("Error", "API failure");
-
-            }
-        });
-
-    }
 }
