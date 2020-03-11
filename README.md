@@ -14,5 +14,6 @@ App is for daily weather broadcast based on user current location. With the help
  
  Dexter runtime permission
  
+ ![](Loading.png)
  
- 
+![](Screen1.png)
