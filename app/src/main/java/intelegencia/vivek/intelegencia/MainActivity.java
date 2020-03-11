@@ -1,32 +1,45 @@
 package intelegencia.vivek.intelegencia;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.arch.lifecycle.Observer;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.google.android.gms.location.FusedLocationProviderApi;
-import com.google.android.gms.location.LocationServices;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 import androidx.work.Constraints;
 import androidx.work.Data;
-import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import mumayank.com.airlocationlibrary.AirLocation;
 
 public class MainActivity extends AppCompatActivity {
-
-    private FusedLocationProviderApi fusedLocationClient;
 
 
     @BindView(R.id.tv_CurrentTemp)
@@ -46,16 +59,42 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.tv_humidity)
     TextView tvHumidity;
 
+    private AirLocation airLocation;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        fusedLocationClient = LocationServices.FusedLocationApi;
+        // Fetch location simply like this whenever you need
+        airLocation = new AirLocation(this, true, true, new AirLocation.Callbacks() {
+            @Override
+            public void onSuccess(@NotNull Location location) {
+                // do something
+                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                List<Address> addresses = null;
+                try {
+                    addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    String cityName = addresses.get(0).getAddressLine(0);
+                    prepareWeatherRequest(cityName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
+            @Override
+            public void onFailed(@NotNull AirLocation.LocationFailedEnum locationFailedEnum) {
+                // do something
+            }
+        });
+
+    }
+
+    private void prepareWeatherRequest(String location) {
         Data data = new Data.Builder()
-                .putString(WorkRequest.TASK_DESC, "Bengaluru")
+                .putString(WorkRequest.TASK_DESC, location)
                 .build();
 
         Constraints constraints = new Constraints.Builder()
@@ -92,6 +131,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        airLocation.onActivityResult(requestCode, resultCode, data);
+    }
 
+    // override and call airLocation object's method by the same name
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        airLocation.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+    }
 }
