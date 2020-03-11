@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="appBackground">#F5F6F7</color>
+    <color name="error_textcolor">#FFFFFF</color>
+    <color name="error_bg_color">#E85959</color>
+    <color name="retry_btn_color">#4A4A4A</color>
+    <color name="current_temp_color">#2A2A2A</color>
+    <color name="location_text_color">#556799</color>
+    <color name="white_color">#FFFFFF</color>
 </resources>
