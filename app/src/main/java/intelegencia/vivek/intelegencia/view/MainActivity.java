@@ -96,11 +96,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        init();
+        initLocationClient();
         getPermission();
     }
 
-    private void init() {
+    private void initLocationClient() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
 
